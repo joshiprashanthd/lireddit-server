@@ -35,12 +35,12 @@ const main = async () => {
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
             resolvers: [HelloResolver, PostResolver, UserResolver],
-            validate: false,
+            validate: false
         }),
         plugins: [
             ApolloServerPluginDrainHttpServer({ httpServer }),
-            ApolloServerPluginLandingPageGraphQLPlayground(),
-        ],
+            ApolloServerPluginLandingPageGraphQLPlayground()
+        ]
     })
 
     await apolloServer.start()
@@ -49,32 +49,32 @@ const main = async () => {
         '/graphql',
         cors<cors.CorsRequest>({
             credentials: true,
-            origin: ['http://localhost:3000'],
+            origin: ['http://localhost:3000']
         }),
         json(),
         session({
             name: COOKIE_NAME,
             store: new RedisStore({
                 client: redisClient as any,
-                disableTouch: true,
+                disableTouch: true
             }),
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
                 secure: false,
-                sameSite: 'lax',
+                sameSite: 'lax'
             },
             secret: 'anything is nothing',
             resave: false,
-            saveUninitialized: false,
+            saveUninitialized: false
         }),
         expressMiddleware(apolloServer, {
             context: async ({ req, res }) =>
                 ({
                     em: orm.em,
                     req,
-                    res,
-                } as MyContext),
+                    res
+                } as MyContext)
         })
     )
 
