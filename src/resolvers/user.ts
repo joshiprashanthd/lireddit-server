@@ -2,26 +2,18 @@ import {
     Arg,
     Ctx,
     Field,
-    InputType,
     Mutation,
     ObjectType,
     Query,
-    Resolver,
+    Resolver
 } from 'type-graphql'
 import { User } from '../entities/User'
 import { MyContext } from '../types'
 import argon2 from 'argon2'
 import { EntityManager } from '@mikro-orm/postgresql'
 import { COOKIE_NAME } from '../constants'
-
-@InputType()
-export class UsernamePasswordInput {
-    @Field()
-    username!: string
-
-    @Field()
-    password!: string
-}
+import { UsernamePasswordInput } from './UsernamePasswordInput'
+import { validateRegister } from '../utils/validateRegister'
 
 @ObjectType()
 class FieldError {
@@ -48,27 +40,8 @@ export class UserResolver {
         @Arg('options') options: UsernamePasswordInput,
         @Ctx() { em, req }: MyContext
     ): Promise<UserResponse> {
-        if (options.username.length <= 3) {
-            return {
-                errors: [
-                    {
-                        field: 'username',
-                        message: 'username must be atleast 4 characters long',
-                    },
-                ],
-            }
-        }
-
-        if (options.password.length <= 7) {
-            return {
-                errors: [
-                    {
-                        field: 'password',
-                        message: 'password must be atleast 8 characters long',
-                    },
-                ],
-            }
-        }
+        const errors = validateRegister(options)
+        if (errors) return { errors }
 
         const hashedPassword = await argon2.hash(options.password)
         let user: User
@@ -80,8 +53,9 @@ export class UserResolver {
                 .insert({
                     username: options.username,
                     password: hashedPassword,
+                    email: options.email,
                     created_at: new Date(),
-                    updated_at: new Date(),
+                    updated_at: new Date()
                 })
                 .returning('*')
 
@@ -93,60 +67,67 @@ export class UserResolver {
                     errors: [
                         {
                             field: 'username',
-                            message: 'username already exists',
-                        },
-                    ],
+                            message: 'username already exists'
+                        }
+                    ]
                 }
             } else {
                 return {
                     errors: [
                         {
                             field: '*',
-                            message: 'An error from database occurred.',
-                        },
-                    ],
+                            message: 'An error from database occurred.'
+                        }
+                    ]
                 }
             }
         }
         req.session.userId = user.id
         return {
-            user,
+            user
         }
     }
 
     @Mutation(() => UserResponse)
     async login(
-        @Arg('options') options: UsernamePasswordInput,
+        @Arg('usernameOrEmail') usernameOrEmail: string,
+        @Arg('password') password: string,
         @Ctx() { em, req }: MyContext
     ): Promise<UserResponse> {
-        const user = await em.findOne(User, { username: options.username })
+        const user = await em.findOne(
+            User,
+            usernameOrEmail.includes('@')
+                ? { email: usernameOrEmail }
+                : { username: usernameOrEmail }
+        )
+
         if (!user) {
             return {
                 errors: [
                     {
-                        field: 'username',
-                        message: `Incorrect username '${options.username}'`,
-                    },
-                ],
+                        field: 'usernameOrEmail',
+                        message: `Incorrect username or email'`
+                    }
+                ]
             }
         }
 
-        const valid = await argon2.verify(user.password, options.password)
+        const valid = await argon2.verify(user.password, password)
         if (!valid) {
             return {
                 errors: [
                     {
                         field: 'password',
-                        message: 'Incorrect password',
-                    },
-                ],
+                        message: 'Incorrect password'
+                    }
+                ]
             }
         }
 
         req.session!.userId = user.id
 
         return {
-            user,
+            user
         }
     }
 
@@ -161,6 +142,14 @@ export class UserResolver {
                 }
             })
         )
+    }
+
+    @Mutation(() => Boolean)
+    async forgotPassword(
+        @Arg('email') email: string,
+        @Ctx() { em }: MyContext
+    ) {
+        return true
     }
 
     @Query(() => User, { nullable: true })
