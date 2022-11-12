@@ -1,24 +1,24 @@
 import { MikroORM } from '@mikro-orm/core'
-import { COOKIE_NAME, __prod__ } from './constants'
-import mikroOrmConfig from './mikro-orm.config'
+import session from 'express-session'
+import connectRedis from 'connect-redis'
 import express from 'express'
 import http from 'http'
 import { json } from 'body-parser'
 import cors from 'cors'
-
 import { expressMiddleware } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 import { ApolloServer } from '@apollo/server'
 import { buildSchema } from 'type-graphql'
+
 import { HelloResolver } from './resolvers/hello'
 import { PostResolver } from './resolvers/posts'
 import { UserResolver } from './resolvers/user'
 
-import { createClient } from 'redis'
-import session from 'express-session'
-import connectRedis from 'connect-redis'
+import Redis from 'ioredis'
 import { MyContext } from './types'
+import { COOKIE_NAME, __prod__ } from './constants'
+import mikroOrmConfig from './mikro-orm.config'
 
 const main = async () => {
     const orm = await MikroORM.init(mikroOrmConfig)
@@ -29,8 +29,7 @@ const main = async () => {
     const httpServer = http.createServer(app)
 
     const RedisStore = connectRedis(session)
-    const redisClient = createClient({ legacyMode: true })
-    await redisClient.connect()
+    const redis = Redis.createClient()
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
@@ -55,7 +54,7 @@ const main = async () => {
         session({
             name: COOKIE_NAME,
             store: new RedisStore({
-                client: redisClient as any,
+                client: redis as any,
                 disableTouch: true
             }),
             cookie: {
@@ -73,7 +72,8 @@ const main = async () => {
                 ({
                     em: orm.em,
                     req,
-                    res
+                    res,
+                    redis
                 } as MyContext)
         })
     )
