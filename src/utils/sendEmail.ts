@@ -10,15 +10,15 @@ export async function sendEmail(to: string, text: string) {
         secure: false,
         auth: {
             user: 'nkmjs5xk2quqopus@ethereal.email',
-            pass: 'kt3s4GYUXsFyFVbF3r',
-        },
+            pass: 'kt3s4GYUXsFyFVbF3r'
+        }
     })
 
     let info = await transporter.sendMail({
         from: 'Prashant Joshi CEO',
         to: to,
         subject: 'Forgot Password',
-        html: `<p>${text}</p>`,
+        html: text
     })
 
     console.log('Sent email: ', info)
