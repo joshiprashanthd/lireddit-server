@@ -1,28 +1,40 @@
-import { MikroORM } from '@mikro-orm/core'
-import session from 'express-session'
-import connectRedis from 'connect-redis'
-import express from 'express'
-import http from 'http'
-import { json } from 'body-parser'
-import cors from 'cors'
+import 'reflect-metadata'
+import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 import { expressMiddleware } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
-import { ApolloServer } from '@apollo/server'
+import { json } from 'body-parser'
+
+import connectRedis from 'connect-redis'
+import cors from 'cors'
+import express from 'express'
+import session from 'express-session'
+import http from 'http'
+import Redis from 'ioredis'
+
 import { buildSchema } from 'type-graphql'
+import { DataSource } from 'typeorm'
 
 import { HelloResolver } from './resolvers/hello'
 import { PostResolver } from './resolvers/posts'
 import { UserResolver } from './resolvers/user'
 
-import Redis from 'ioredis'
-import { MyContext } from './types'
 import { COOKIE_NAME, __prod__ } from './constants'
-import mikroOrmConfig from './mikro-orm.config'
+import { Post } from './entities/Post'
+import { User } from './entities/User'
+import { MyContext } from './types'
 
 const main = async () => {
-    const orm = await MikroORM.init(mikroOrmConfig)
-    await orm.getMigrator().up()
+    const AppDataSource = new DataSource({
+        type: 'postgres',
+        port: 5432,
+        database: 'lireddit2',
+        entities: [User, Post],
+        synchronize: true,
+        logging: true
+    })
+
+    await AppDataSource.initialize()
 
     const app = express()
     app.set('trust proxy', !__prod__) // important for session persistence
@@ -70,7 +82,6 @@ const main = async () => {
         expressMiddleware(apolloServer, {
             context: async ({ req, res }) =>
                 ({
-                    em: orm.em,
                     req,
                     res,
                     redis
