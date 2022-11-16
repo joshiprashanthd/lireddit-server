@@ -6,9 +6,11 @@ import {
     Int,
     InputType,
     Field,
-    Ctx
+    Ctx,
+    UseMiddleware
 } from 'type-graphql'
 import { Post } from '../entities/Post'
+import { isAuth } from '../middleware/isAuth'
 import { MyContext } from '../types'
 
 @InputType()
@@ -33,6 +35,7 @@ export class PostResolver {
     }
 
     @Mutation(() => Post)
+    @UseMiddleware(isAuth)
     async createPost(
         @Arg('input') input: PostInput,
         @Ctx() { req }: MyContext
