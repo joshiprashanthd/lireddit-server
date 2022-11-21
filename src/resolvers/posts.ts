@@ -7,7 +7,9 @@ import {
     InputType,
     Field,
     Ctx,
-    UseMiddleware
+    UseMiddleware,
+    Root,
+    FieldResolver
 } from 'type-graphql'
 import { Post } from '../entities/Post'
 import { isAuth } from '../middleware/isAuth'
@@ -22,11 +24,16 @@ export class PostInput {
     text: string
 }
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+    @FieldResolver(() => String)
+    textSnippet(@Root() post: Post) {
+        return post.text.slice(0, 50)
+    }
+
     @Query(() => [Post])
     posts(
-        @Arg('limit') limit: number,
+        @Arg('limit', () => Int) limit: number,
         @Arg('cursor', () => String, { nullable: true }) cursor: string | null
     ): Promise<Post[]> {
         const realLimit = Math.min(30, limit)
