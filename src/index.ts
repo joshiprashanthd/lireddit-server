@@ -23,18 +23,19 @@ import { COOKIE_NAME, __prod__ } from './constants'
 import { Post } from './entities/Post'
 import { User } from './entities/User'
 import { MyContext } from './types'
+import { Updoot } from './entities/updoot'
 
 const main = async () => {
     const AppDataSource = new DataSource({
         type: 'postgres',
         port: 5432,
         database: 'lireddit2',
-        entities: [User, Post],
+        entities: [User, Post, Updoot],
         synchronize: true,
         logging: true
     })
 
-    await AppDataSource.initialize()
+    const dataSource = await AppDataSource.initialize()
 
     const app = express()
     app.set('trust proxy', !__prod__) // important for session persistence
@@ -50,7 +51,11 @@ const main = async () => {
         }),
         plugins: [
             ApolloServerPluginDrainHttpServer({ httpServer }),
-            ApolloServerPluginLandingPageGraphQLPlayground()
+            ApolloServerPluginLandingPageGraphQLPlayground({
+                settings: {
+                    'request.credentials': 'include'
+                }
+            })
         ]
     })
 
@@ -84,7 +89,8 @@ const main = async () => {
                 ({
                     req,
                     res,
-                    redis
+                    redis,
+                    dataSource
                 } as MyContext)
         })
     )
