@@ -9,6 +9,7 @@ import {
     UpdateDateColumn
 } from 'typeorm'
 import { Post } from './Post'
+import { Updoot } from './updoot'
 
 @ObjectType()
 @Entity()
@@ -31,6 +32,11 @@ export class User extends BaseEntity {
     @Field(() => [Post])
     @OneToMany(() => Post, (post) => post.creator)
     posts: Post[]
+
+    @OneToMany(() => Updoot, (updoot) => updoot.user, {
+        onDelete: 'CASCADE'
+    })
+    updoots: Updoot[]
 
     @Field(() => String)
     @CreateDateColumn()

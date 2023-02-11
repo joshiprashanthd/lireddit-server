@@ -5,9 +5,11 @@ import {
     CreateDateColumn,
     Entity,
     ManyToOne,
+    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn
 } from 'typeorm'
+import { Updoot } from './updoot'
 import { User } from './User'
 
 @ObjectType()
@@ -25,16 +27,26 @@ export class Post extends BaseEntity {
     @Column()
     text!: string
 
-    @Field(() => String)
+    @Field(() => Int)
     @Column({ type: 'int', default: 0 })
     points!: number
 
-    @Field()
+    @Field(() => Int, { nullable: true })
+    voteStatus: number | null
+
+    @Field(() => Int)
     @Column()
+    // typeorm automatically infers that `creator` field of type User can be set using `creatorId` during JOIN operations
     creatorId: number
 
+    @Field(() => User)
     @ManyToOne(() => User, (user) => user.posts)
     creator: User
+
+    @OneToMany(() => Updoot, (updoot) => updoot.post, {
+        onDelete: 'CASCADE'
+    })
+    updoots: Updoot[]
 
     @Field(() => String)
     @CreateDateColumn()
