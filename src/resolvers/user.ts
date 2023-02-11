@@ -4,10 +4,12 @@ import {
     Arg,
     Ctx,
     Field,
+    FieldResolver,
     Mutation,
     ObjectType,
     Query,
-    Resolver
+    Resolver,
+    Root
 } from 'type-graphql'
 
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants'
@@ -35,12 +37,23 @@ class UserResponse {
     user?: User
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+    @FieldResolver(() => String)
+    email(@Root() user: User, @Ctx() { req }: MyContext) {
+        if (req.session.userId == user.id) return user.email
+        return ''
+    }
+
+    @Query(() => [User])
+    users() {
+        return User.createQueryBuilder().getMany()
+    }
+
     @Mutation(() => UserResponse)
     async register(
         @Arg('options') options: UsernamePasswordInput,
-        @Ctx() { req }: MyContext
+        @Ctx() { req, dataSource }: MyContext
     ): Promise<UserResponse> {
         const errors = validateRegister(options)
         if (errors) return { errors }
@@ -64,7 +77,9 @@ export class UserResolver {
             user = await User.create({
                 ...options,
                 password: hashedPassword
-            }).save()
+            })
+
+            dataSource.getRepository(User).insert(user)
         } catch (err) {
             if (
                 err.detail.includes('already exists') &&
@@ -115,18 +130,17 @@ export class UserResolver {
         @Arg('password') password: string,
         @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
-        const user = await User.findOne(
-            usernameOrEmail.includes('@')
-                ? { where: { email: usernameOrEmail } }
-                : { where: { username: usernameOrEmail } }
-        )
+        const user = await User.createQueryBuilder()
+            .where('username = :value OR email = :value')
+            .setParameter('value', usernameOrEmail)
+            .getOne()
 
         if (!user) {
             return {
                 errors: [
                     {
-                        field: 'usernameOrEmail',
-                        message: `Incorrect username or email'`
+                        field: 'username',
+                        message: 'Username already taken'
                     }
                 ]
             }
@@ -146,9 +160,7 @@ export class UserResolver {
 
         req.session!.userId = user.id
 
-        return {
-            user
-        }
+        return { user }
     }
 
     @Mutation(() => Boolean)
