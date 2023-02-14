@@ -6,7 +6,7 @@ services:
       region: singapore
       plan: free
       branch: main
-      buildCommand: npm run build
+      buildCommand: npm install typescript && npm run build
       startCommand: npm start
       envVars:
           - key: DATABASE_URL
