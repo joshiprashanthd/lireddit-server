@@ -25,5 +25,6 @@ services:
     - type: redis
       name: lireddit-prod-redis1
       plan: free
-database:
+databases:
     - name: lireddit-prod-database1
+      plan: free
