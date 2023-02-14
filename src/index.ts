@@ -24,6 +24,8 @@ import { Post } from './entities/Post'
 import { User } from './entities/User'
 import { MyContext } from './types'
 import { Updoot } from './entities/updoot'
+import { createUserLoader } from './utils/createUserLoader'
+import { createUpdootLoader } from './utils/createUpdootLoader'
 
 const main = async () => {
     const AppDataSource = new DataSource({
@@ -90,7 +92,9 @@ const main = async () => {
                     req,
                     res,
                     redis,
-                    dataSource
+                    dataSource,
+                    userLoader: createUserLoader(),
+                    updootLoader: createUpdootLoader()
                 } as MyContext)
         })
     )
