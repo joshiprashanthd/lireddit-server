@@ -169,7 +169,7 @@ export class UserResolver {
             req.session.destroy((err) => {
                 if (err) resolve(false)
                 else {
-                    res.clearCookie(COOKIE_NAME)
+                    res.clearCookie(COOKIE_NAME!)
                     resolve(true)
                 }
             })

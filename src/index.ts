@@ -19,7 +19,7 @@ import { HelloResolver } from './resolvers/hello'
 import { PostResolver } from './resolvers/posts'
 import { UserResolver } from './resolvers/user'
 
-import { COOKIE_NAME, __prod__ } from './constants'
+import { COOKIE_NAME, DATABASE_URL, PROD, REDIS_URL } from './constants'
 import { Post } from './entities/Post'
 import { User } from './entities/User'
 import { MyContext } from './types'
@@ -30,21 +30,20 @@ import { createUpdootLoader } from './utils/createUpdootLoader'
 const main = async () => {
     const AppDataSource = new DataSource({
         type: 'postgres',
-        port: 5432,
-        database: 'lireddit2',
+        url: DATABASE_URL,
         entities: [User, Post, Updoot],
         synchronize: true,
-        logging: true
+        logging: !PROD
     })
 
     const dataSource = await AppDataSource.initialize()
 
     const app = express()
-    app.set('trust proxy', !__prod__) // important for session persistence
+    app.set('trust proxy', !PROD) // important for session persistence
     const httpServer = http.createServer(app)
 
     const RedisStore = connectRedis(session)
-    const redis = Redis.createClient()
+    const redis = new Redis(REDIS_URL!)
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
