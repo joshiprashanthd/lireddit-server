@@ -14,6 +14,7 @@ import {
 } from 'type-graphql'
 import { Post } from '../entities/Post'
 import { Updoot } from '../entities/updoot'
+import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { MyContext } from '../types'
 
@@ -39,20 +40,26 @@ export class PostInput {
 export class PostResolver {
     @FieldResolver(() => String)
     textSnippet(@Root() post: Post) {
-        return post.text.slice(0, 50)
+        return post.text.slice(0, 140)
+    }
+
+    @FieldResolver(() => User)
+    creator(
+        @Root() post: Post,
+        @Ctx() { userLoader }: MyContext
+    ): Promise<User | null> {
+        return userLoader.load(post.creatorId)
     }
 
     @FieldResolver(() => Int, { nullable: true })
     async voteStatus(
         @Root() post: Post,
-        @Ctx() { req }: MyContext
+        @Ctx() { req, updootLoader }: MyContext
     ): Promise<number | null> {
         if (!req.session.userId) return null
-        const updoot = await Updoot.findOne({
-            where: {
-                userId: req.session.userId,
-                postId: post.id
-            }
+        const updoot = await updootLoader.load({
+            userId: req.session.userId,
+            postId: post.id
         })
         return updoot ? updoot.value : null
     }
@@ -67,7 +74,6 @@ export class PostResolver {
 
         const qb = Post.createQueryBuilder('post')
             .select('post')
-            .innerJoinAndSelect('post.creator', 'user')
             .orderBy('post.createdAt', 'DESC')
             .take(realLimitPlusOne)
 
@@ -109,22 +115,31 @@ export class PostResolver {
     }
 
     @Mutation(() => Post, { nullable: true })
+    @UseMiddleware(isAuth)
     async updatePost(
         @Arg('id', () => Int) id: number,
         @Arg('title', () => String, { nullable: true }) title: string,
-        @Arg('text', () => String, { nullable: true }) text: string
+        @Arg('text', () => String, { nullable: true }) text: string,
+        @Ctx() { req }: MyContext
     ): Promise<Post | null> {
-        const post = await Post.findOne({ where: { id } })
-        if (!post) return null
-        post.title = title ?? post.title
-        post.text = text ?? post.text
-        await Post.update({ id }, { title, text })
-        return post
+        const result = await Post.createQueryBuilder('post')
+            .update({ title, text })
+            .where('id = :id AND creatorId = :creatorId', {
+                id,
+                creatorId: req.session.userId
+            })
+            .returning('*')
+            .execute()
+        return result.raw[0]
     }
 
     @Mutation(() => Boolean)
-    async deletePost(@Arg('id') id: number): Promise<Boolean> {
-        const result = await Post.delete({ id })
+    @UseMiddleware(isAuth)
+    async deletePost(
+        @Arg('id', () => Int) id: number,
+        @Ctx() { req }: MyContext
+    ): Promise<Boolean> {
+        const result = await Post.delete({ id, creatorId: req.session.userId })
         return result.affected! > 0
     }
 
@@ -161,10 +176,18 @@ export class PostResolver {
             // if already voted but the now voting value is different from previous voting value
             if (updoot && updoot.value != realValue) {
                 updoot.value = realValue
-                await queryRunner.manager.save(updoot)
+                await queryRunner.manager.update(
+                    Updoot,
+                    { userId: updoot.userId, postId: updoot.postId },
+                    { value: realValue }
+                )
 
                 post.points = post.points + 2 * realValue
-                await queryRunner.manager.save(post)
+                await queryRunner.manager.update(
+                    Post,
+                    { id: post.id },
+                    { points: post.points }
+                )
                 // if already voted but user wants to undo the voting
             } else if (updoot && updoot.value == realValue) {
                 await queryRunner.manager.delete(Updoot, {
@@ -172,7 +195,11 @@ export class PostResolver {
                     postId: updoot.postId
                 })
                 post.points = post.points - realValue
-                await queryRunner.manager.save(post)
+                await queryRunner.manager.update(
+                    Post,
+                    { id: post.id },
+                    { points: post.points }
+                )
 
                 // post is not yet voted by user
             } else {
@@ -181,10 +208,14 @@ export class PostResolver {
                     postId,
                     value: realValue
                 })
-                await queryRunner.manager.save(updoot)
+                await queryRunner.manager.insert(Updoot, updoot)
 
                 post!.points = post!.points + realValue
-                await queryRunner.manager.save(post)
+                await queryRunner.manager.update(
+                    Post,
+                    { id: post.id },
+                    { points: post.points }
+                )
             }
             await queryRunner.commitTransaction()
         } catch (err) {
