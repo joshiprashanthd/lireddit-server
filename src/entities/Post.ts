@@ -9,7 +9,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn
 } from 'typeorm'
-import { Updoot } from './updoot'
+import { Updoot } from './Updoot'
 import { User } from './User'
 
 @ObjectType()

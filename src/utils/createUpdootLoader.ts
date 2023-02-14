@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader'
-import { Updoot } from '../entities/updoot'
+import { Updoot } from '../entities/Updoot'
 export const createUpdootLoader = () =>
     new DataLoader<{ userId: number; postId: number }, Updoot | null>(
         async (userAndPostIds) => {

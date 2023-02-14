@@ -23,7 +23,7 @@ import { COOKIE_NAME, DATABASE_URL, PROD, REDIS_URL } from './constants'
 import { Post } from './entities/Post'
 import { User } from './entities/User'
 import { MyContext } from './types'
-import { Updoot } from './entities/updoot'
+import { Updoot } from './entities/Updoot'
 import { createUserLoader } from './utils/createUserLoader'
 import { createUpdootLoader } from './utils/createUpdootLoader'
 

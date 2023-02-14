@@ -13,7 +13,7 @@ import {
     UseMiddleware
 } from 'type-graphql'
 import { Post } from '../entities/Post'
-import { Updoot } from '../entities/updoot'
+import { Updoot } from '../entities/Updoot'
 import { User } from '../entities/User'
 import { isAuth } from '../middleware/isAuth'
 import { MyContext } from '../types'
