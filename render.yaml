@@ -25,6 +25,9 @@ services:
     - type: redis
       name: lireddit-prod-redis1
       plan: free
+      ipAllowList:
+          - source: 0.0.0.0/0
+            description: everywhere
 databases:
     - name: lireddit-prod-database1
       plan: free
