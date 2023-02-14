@@ -1,0 +1,29 @@
+services:
+    - type: web
+      name: lireddit-prod-backend1
+      env: node
+      repo: https://github.com/joshiprashanthd/lireddit-server.git
+      region: singapore
+      plan: free
+      branch: main
+      buildCommand: yarn build
+      startCommand: npm start
+      envVars:
+          - key: DATABASE_URL
+            fromDatabase:
+                name: lireddit-prod-database1
+                property: connectionString
+          - key: REDIS_URL
+            fromService:
+                type: redis
+                name: lireddit-prod-redis1
+                property: connectionString
+          - key: FORGET_PASSWORD_PREFIX
+            value: 'forget-password:'
+          - key: COOKIE_NAME
+            value: 'qid'
+    - type: redis
+      name: lireddit-prod-redis1
+      plan: free
+database:
+    - name: lireddit-prod-database1
