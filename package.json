@@ -12,10 +12,9 @@
     },
     "scripts": {
         "watch": "tsc -w",
-        "build": "tsc",
+        "build": "rimraf ./dist && tsc",
         "start": "node dist/index.js",
-        "dev": "nodemon dist/index.js",
-        "dev2": "nodemon --exec ts-node src/index.ts"
+        "dev": "nodemon dist/index.js"
     },
     "keywords": [],
     "author": "",
