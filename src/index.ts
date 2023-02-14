@@ -1,6 +1,5 @@
 import 'reflect-metadata'
 import { ApolloServer } from '@apollo/server'
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 import { expressMiddleware } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { json } from 'body-parser'
@@ -51,12 +50,13 @@ const main = async () => {
             validate: false
         }),
         plugins: [
-            ApolloServerPluginDrainHttpServer({ httpServer }),
-            ApolloServerPluginLandingPageGraphQLPlayground({
-                settings: {
-                    'request.credentials': 'include'
-                }
-            })
+            ApolloServerPluginDrainHttpServer({ httpServer })
+
+            // ApolloServerPluginLandingPageGraphQLPlayground({
+            //     settings: {
+            //         'request.credentials': 'include'
+            //     }
+            // })
         ]
     })
 
@@ -78,7 +78,7 @@ const main = async () => {
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
-                secure: false,
+                secure: PROD,
                 sameSite: 'lax'
             },
             secret: 'anything is nothing',
@@ -101,7 +101,7 @@ const main = async () => {
     await new Promise<void>((resolve) =>
         httpServer.listen({ port: 4000 }, resolve)
     )
-    console.log(`🚀 Server ready at http://localhost:4000/graphql`)
+    console.log(`🚀 Server ready`)
 }
 
 main()

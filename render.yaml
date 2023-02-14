@@ -22,6 +22,8 @@ services:
             value: 'forget-password:'
           - key: COOKIE_NAME
             value: 'qid'
+          - key: NODE_ENV
+            value: 'production'
     - type: redis
       name: lireddit-prod-redis1
       plan: free
