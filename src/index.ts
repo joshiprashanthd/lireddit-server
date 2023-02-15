@@ -25,7 +25,6 @@ import { MyContext } from './types'
 import { Updoot } from './entities/Updoot'
 import { createUserLoader } from './utils/createUserLoader'
 import { createUpdootLoader } from './utils/createUpdootLoader'
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 
 const main = async () => {
     const AppDataSource = new DataSource({
@@ -39,6 +38,7 @@ const main = async () => {
 
     try {
         dataSource = await AppDataSource.initialize()
+        await dataSource.runMigrations()
     } catch (err) {
         console.log('app data source initialize error: ', err)
     }
@@ -56,14 +56,7 @@ const main = async () => {
             validate: false
         }),
         csrfPrevention: true,
-        plugins: [
-            ApolloServerPluginDrainHttpServer({ httpServer }),
-            ApolloServerPluginLandingPageGraphQLPlayground({
-                settings: {
-                    'request.credentials': 'include'
-                }
-            })
-        ]
+        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
     try {
         await apolloServer.start()
