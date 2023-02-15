@@ -33,7 +33,6 @@ const main = async () => {
         url: DATABASE_URL,
         entities: [User, Post, Updoot],
         migrations: [path.join(__dirname, './migrations/*')],
-        // migrationsRun: true,
         synchronize: !PROD,
         logging: true
     })
@@ -42,7 +41,6 @@ const main = async () => {
     try {
         dataSource = await AppDataSource.initialize()
         await dataSource.synchronize()
-        // await dataSource.runMigrations()
     } catch (err) {
         console.log('app data source initialize error: ', err)
     }
@@ -52,7 +50,7 @@ const main = async () => {
     const httpServer = http.createServer(app)
 
     const RedisStore = connectRedis(session)
-    const redis = new Redis(REDIS_URL!)
+    const redis = new Redis(PROD ? REDIS_URL! : '')
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
@@ -85,7 +83,7 @@ const main = async () => {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
                 secure: PROD,
-                sameSite: 'none'
+                sameSite: PROD ? 'none' : 'lax'
             },
             secret: 'anything is nothing',
             resave: false,
@@ -104,7 +102,7 @@ const main = async () => {
         })
     )
 
-    const port = process.env.PORT || 8080
+    const port = process.env.PORT || 4000
     try {
         await new Promise<void>((resolve) =>
             httpServer.listen({ host: '0.0.0.0', port }, resolve)
