@@ -33,14 +33,16 @@ const main = async () => {
         url: DATABASE_URL,
         entities: [User, Post, Updoot],
         migrations: [path.join(__dirname, './migrations/*')],
+        // migrationsRun: true,
         synchronize: !PROD,
-        logging: !PROD
+        logging: true
     })
     let dataSource: DataSource
 
     try {
         dataSource = await AppDataSource.initialize()
-        await dataSource.runMigrations()
+        await dataSource.synchronize()
+        // await dataSource.runMigrations()
     } catch (err) {
         console.log('app data source initialize error: ', err)
     }
