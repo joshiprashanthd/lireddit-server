@@ -79,7 +79,9 @@ export class UserResolver {
                 password: hashedPassword
             })
 
-            dataSource.getRepository(User).insert(user)
+            const result = await dataSource.getRepository(User).insert(user)
+            user = result.raw[0]
+            console.log('register. insert user result: ', result)
         } catch (err) {
             if (
                 err.detail.includes('already exists') &&
@@ -116,6 +118,7 @@ export class UserResolver {
                 }
             }
         }
+        console.log('userid after inserting user: ', user.id)
 
         req.session.userId = user.id
 
