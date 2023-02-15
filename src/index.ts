@@ -25,6 +25,7 @@ import { MyContext } from './types'
 import { Updoot } from './entities/Updoot'
 import { createUserLoader } from './utils/createUserLoader'
 import { createUpdootLoader } from './utils/createUpdootLoader'
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 
 const main = async () => {
     console.log('database url: ', DATABASE_URL)
@@ -34,11 +35,16 @@ const main = async () => {
         type: 'postgres',
         url: DATABASE_URL,
         entities: [User, Post, Updoot],
-        synchronize: true,
+        synchronize: !PROD,
         logging: !PROD
     })
+    let dataSource: DataSource
 
-    const dataSource = await AppDataSource.initialize()
+    try {
+        dataSource = await AppDataSource.initialize()
+    } catch (err) {
+        console.log('app data source initialize error: ', err)
+    }
 
     const app = express()
     app.set('trust proxy', PROD) // important for session persistence
@@ -52,18 +58,21 @@ const main = async () => {
             resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false
         }),
+        csrfPrevention: true,
         plugins: [
-            ApolloServerPluginDrainHttpServer({ httpServer })
-
-            // ApolloServerPluginLandingPageGraphQLPlayground({
-            //     settings: {
-            //         'request.credentials': 'include'
-            //     }
-            // })
+            ApolloServerPluginDrainHttpServer({ httpServer }),
+            ApolloServerPluginLandingPageGraphQLPlayground({
+                settings: {
+                    'request.credentials': 'include'
+                }
+            })
         ]
     })
-
-    await apolloServer.start()
+    try {
+        await apolloServer.start()
+    } catch (err) {
+        console.log('apolloserver.start error: ', err)
+    }
 
     app.use(
         '/graphql',
@@ -101,9 +110,15 @@ const main = async () => {
         })
     )
 
-    await new Promise<void>((resolve) =>
-        httpServer.listen({ port: 4000 }, resolve)
-    )
+    const port = process.env.PORT || 8080
+    try {
+        await new Promise<void>((resolve) =>
+            httpServer.listen({ host: '0.0.0.0', port }, resolve)
+        )
+    } catch (err) {
+        console.log('http server resolve error: ', err)
+    }
+
     console.log(`🚀 Server ready`)
 }
 
