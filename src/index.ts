@@ -38,7 +38,7 @@ const main = async () => {
     const dataSource = await AppDataSource.initialize()
 
     const app = express()
-    app.set('trust proxy', !PROD) // important for session persistence
+    app.set('trust proxy', PROD) // important for session persistence
     const httpServer = http.createServer(app)
 
     const RedisStore = connectRedis(session)
