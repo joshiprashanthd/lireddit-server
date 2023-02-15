@@ -75,7 +75,7 @@ const main = async () => {
         '/graphql',
         cors<cors.CorsRequest>({
             credentials: true,
-            origin: '*'
+            origin: ['http://localhost:3000']
         }),
         json(),
         session({
@@ -88,7 +88,7 @@ const main = async () => {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
                 secure: PROD,
-                sameSite: 'lax'
+                sameSite: 'none'
             },
             secret: 'anything is nothing',
             resave: false,
