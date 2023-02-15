@@ -72,6 +72,8 @@ export class PostResolver {
         const realLimit = Math.min(30, limit)
         const realLimitPlusOne = realLimit + 1
 
+        console.log('in posts resolver')
+
         const qb = Post.createQueryBuilder('post')
             .select('post')
             .orderBy('post.createdAt', 'DESC')
@@ -83,6 +85,7 @@ export class PostResolver {
             })
 
         const posts = await qb.getMany()
+        console.log('posts: ', [posts])
 
         return {
             posts: posts.slice(0, realLimit),

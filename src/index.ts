@@ -25,12 +25,14 @@ import { MyContext } from './types'
 import { Updoot } from './entities/Updoot'
 import { createUserLoader } from './utils/createUserLoader'
 import { createUpdootLoader } from './utils/createUpdootLoader'
+import path from 'path'
 
 const main = async () => {
     const AppDataSource = new DataSource({
         type: 'postgres',
         url: DATABASE_URL,
         entities: [User, Post, Updoot],
+        migrations: [path.join(__dirname, './migrations/*')],
         synchronize: !PROD,
         logging: !PROD
     })
