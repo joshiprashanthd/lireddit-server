@@ -104,4 +104,6 @@ const main = async () => {
     console.log(`🚀 Server ready`)
 }
 
-main()
+main().catch((err) => {
+    console.log('Found Errors: ', err)
+})
