@@ -27,6 +27,9 @@ import { createUserLoader } from './utils/createUserLoader'
 import { createUpdootLoader } from './utils/createUpdootLoader'
 
 const main = async () => {
+    console.log('database url: ', DATABASE_URL)
+    console.log('redis url: ', REDIS_URL)
+
     const AppDataSource = new DataSource({
         type: 'postgres',
         url: DATABASE_URL,
