@@ -82,7 +82,7 @@ const main = async () => {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
                 secure: PROD,
-                sameSite: false
+                sameSite: 'none'
             },
             secret: 'anything is nothing',
             resave: false,
