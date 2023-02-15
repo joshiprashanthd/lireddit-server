@@ -28,9 +28,6 @@ import { createUpdootLoader } from './utils/createUpdootLoader'
 import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground'
 
 const main = async () => {
-    console.log('database url: ', DATABASE_URL)
-    console.log('redis url: ', REDIS_URL)
-
     const AppDataSource = new DataSource({
         type: 'postgres',
         url: DATABASE_URL,
