@@ -57,7 +57,6 @@ const main = async () => {
             resolvers: [HelloResolver, PostResolver, UserResolver],
             validate: false
         }),
-        csrfPrevention: true,
         plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
     try {
@@ -83,7 +82,7 @@ const main = async () => {
                 maxAge: 1000 * 60 * 60 * 24 * 8,
                 httpOnly: true,
                 secure: PROD,
-                sameSite: PROD ? 'none' : 'lax'
+                sameSite: 'none'
             },
             secret: 'anything is nothing',
             resave: false,
