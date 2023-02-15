@@ -63,25 +63,16 @@ export class UserResolver {
         let user: User
 
         try {
-            // const result = await User.createQueryBuilder()
-            //     .insert()
-            //     .values({
-            //         username: options.username,
-            //         email: options.email,
-            //         password: hashedPassword
-            //     })
-            //     .returning('*')
-            //     .execute()
-            // user = result.raw[0]
-
-            user = await User.create({
-                ...options,
-                password: hashedPassword
-            })
-
-            const result = await dataSource.getRepository(User).insert(user)
+            const result = await User.createQueryBuilder()
+                .insert()
+                .values({
+                    username: options.username,
+                    email: options.email,
+                    password: hashedPassword
+                })
+                .returning('*')
+                .execute()
             user = result.raw[0]
-            console.log('register. insert user result: ', result)
         } catch (err) {
             if (
                 err.detail.includes('already exists') &&
@@ -118,10 +109,8 @@ export class UserResolver {
                 }
             }
         }
-        console.log('userid after inserting user: ', user.id)
 
         req.session.userId = user.id
-
         return {
             user
         }
