@@ -24,6 +24,8 @@ services:
             value: 'qid'
           - key: NODE_ENV
             value: 'production'
+          - key: GRAPHQL_SERVER
+            value: 'https://lireddit-prod-backend1.onrender.com/graphql'
     - type: redis
       name: lireddit-prod-redis1
       plan: free
