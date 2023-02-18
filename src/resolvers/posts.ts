@@ -56,6 +56,7 @@ export class PostResolver {
         @Root() post: Post,
         @Ctx() { req, updootLoader }: MyContext
     ): Promise<number | null> {
+        console.log('reqeust: ', req)
         if (!req.session.userId) return null
         const updoot = await updootLoader.load({
             userId: req.session.userId,
